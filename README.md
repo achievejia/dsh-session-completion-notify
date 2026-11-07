@@ -1,6 +1,6 @@
 # 会话完成通知 / Session Completion Notifications
 
-DSH Host 插件，版本 1.3.0。项目采用 GNU Affero General Public License v3.0（见 `LICENSE`）。主会话的一轮回复正常结束后，向本机 macOS 提交通知并播放提示音。通知标题为会话标题（如 `1103 | 发布 | 服务部署`），正文为本轮回复的摘要（Codex 风格）；两者均经脱敏与截断。没有客户端页面、外部网络请求或模型调用。
+DSH Host 插件，版本 1.4.0。项目采用 GNU Affero General Public License v3.0（见 `LICENSE`）。主会话的一轮回复正常结束后，向本机 macOS 提交通知并播放提示音。通知标题为会话标题（如 `1103 | 发布 | 服务部署`），正文为本轮回复的摘要（Codex 风格）；两者均经脱敏与截断。没有客户端页面、外部网络请求或模型调用。
 
 ## 行为与验收
 
@@ -40,12 +40,19 @@ showSessionTitle: true    # 标题=会话标题；false 用固定标题
 
 ## 安装与开发
 
-从源码开发时，可使用 DSH `plugin_manager install_bundle` 安装本地绝对目录，影响当前 profile 的所有会话并跨重启保留。发布包可直接通过 GitHub 安装：
+从源码开发时，可使用 DSH `plugin_manager install_bundle` 安装本地绝对目录，影响当前 profile 的所有会话并跨重启保留。发布包优先使用 npm（预构建，不会拉入旧版 DSH 核心）：
+
+```sh
+dsh plugin --profile <profile> add dsh-session-completion-notify
+```
+
+也可从 GitHub 源码安装：
 
 ```sh
 dsh plugin --profile <profile> add github:achievejia/dsh-session-completion-notify
 ```
-仅依赖宿主同系列 `@deepseek-ai/schemastery` 来公开 Config Schema。发布包不会携带本机绝对路径或本地依赖软链；从源码开发时需在插件目录安装宿主同系列依赖。
+
+DSH 核心运行时由宿主提供：`@deepseek-ai/dsh-session` 与 `@deepseek-ai/schemastery` 仅作为可选 `peerDependencies`，版本范围为 `*`，不会再把旧版核心（例如 `0.2.1-rc.5`）拉入插件。当前宿主的 `0.2.2-rc.1` 可直接使用；宿主升级核心后无需同步修改插件版本。插件 Loader 会在 `sessions` 核心服务不可用时跳过本次挂载并等待后续重载，避免安装或宿主启动期间的瞬时缺服务抛错。发布包不会携带本机绝对路径或本地依赖软链。
 
 ```sh
 npm test

@@ -1,6 +1,10 @@
 - insert:
     - id: session-completion-notify
       name: 'dsh-session-completion-notify'
+      # Defer activation while the host core is still composing. The Loader
+      # reevaluates this expression on later mount decisions instead of
+      # letting a transient missing service fail the plugin fiber.
+      disabled: !!js "!ctx.get('sessions')"
       config:
         enabled: true
         sound: true

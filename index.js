@@ -4,6 +4,16 @@ import { sendNativeNotification } from './native.js';
 import { buildNotifierApp } from './applet.js';
 
 export const name = 'session-completion-notify';
+
+/** Return false when the host is still composing its session core. */
+export function hasRequiredCoreServices(ctx) {
+  try {
+    return Boolean(ctx?.get?.('sessions'));
+  } catch {
+    return false;
+  }
+}
+
 export const Config = z.object({
   enabled: z.boolean().default(true).description('完成通知总开关'),
   sound: z.boolean().default(true).description('使用系统 Glass 提示音'),
@@ -13,8 +23,13 @@ export const Config = z.object({
 });
 
 export function apply(ctx, config) {
+  const logger = ctx.logger('session-completion-notify');
+  if (!hasRequiredCoreServices(ctx)) {
+    logger.warn('Session core is unavailable; notification plugin mount deferred.');
+    return;
+  }
   if (process.platform !== 'darwin') {
-    ctx.logger('session-completion-notify').warn('Native notification is unavailable: macOS required.');
+    logger.warn('Native notification is unavailable: macOS required.');
     return;
   }
   // Lazily built once per machine; a failed build retries on the next turn.

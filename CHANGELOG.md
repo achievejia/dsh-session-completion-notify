@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0 — 2026-11-08
+
+### Changed
+- DSH 核心运行时改为宿主提供：`@deepseek-ai/dsh-session` 与 `@deepseek-ai/schemastery` 使用可选 `peerDependencies: "*"`，不再把旧版核心依赖带入插件；宿主核心升级无需同步改插件版本。
+
+### Fixed
+- 新增 Loader 与 apply 双重启动保护：`sessions` 服务暂不可用时延后挂载并记录警告，不让安装/启动期间的瞬时核心缺失拖垮插件 fiber。
+
 ## 1.3.0 — 2026-11-04
 
 ### Changed

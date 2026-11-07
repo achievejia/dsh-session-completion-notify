@@ -1,5 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { hasRequiredCoreServices } from './index.js';
 import { createCompletionListener, normalizeConfig, mountCompletionNotifications } from './core.js';
 import { sendNativeNotification } from './native.js';
 
@@ -64,6 +66,19 @@ test('transport failure is contained and reported without logging payload', asyn
 test('rejects unknown configuration and invalid booleans', () => {
   assert.throws(() => normalizeConfig({ sound: 'false' })); assert.throws(() => normalizeConfig({ command: 'anything' }));
 });
+test('core service guard is safe during incomplete host composition', () => {
+  assert.equal(hasRequiredCoreServices({ get: () => ({}) }), true);
+  assert.equal(hasRequiredCoreServices({ get: () => undefined }), false);
+  assert.equal(hasRequiredCoreServices({ get: () => { throw Error('service unavailable'); } }), false);
+});
+test('package uses host-provided DSH runtime and guards unavailable core service', () => {
+  const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
+  const core = ['@deepseek-ai/dsh-session', '@deepseek-ai/schemastery'];
+  assert.equal(core.every(name => !(name in (pkg.dependencies ?? {}))), true);
+  assert.equal(core.every(name => pkg.peerDependencies?.[name] === '*' && pkg.peerDependenciesMeta?.[name]?.optional === true), true);
+  const patch = readFileSync(new URL('./cordis.patch.yml', import.meta.url), 'utf8');
+  assert.equal(patch.includes("disabled: !!js \"!ctx.get('sessions')\""), true);
+});
 function context() {
   const listeners = new Map(), cleanups = [], warnings = [];
   return { listeners, cleanups, warnings,
@@ -121,7 +136,6 @@ test('native transport sends through the prepared notifier binary with user text
     execute(file, args, options, callback) { call = { file, args, options }; callback(null, '', ''); }
   });
   assert.equal(call.file, '/notifier/DSH Notify.app/Contents/MacOS/dsh-notify');
-  // Untrusted text travels only as arguments, never compiled or interpolated.
   assert.deepEqual(call.args, [text, text, 'true']);
   assert.equal(call.options.shell, false);
   assert.equal(call.options.timeout, 8000);
