@@ -1,0 +1,9 @@
+- insert:
+    - id: session-completion-notify
+      name: 'dsh-session-completion-notify'
+      config:
+        enabled: true
+        sound: true
+        includeSubagents: false
+        showPreview: true
+        showSessionTitle: true

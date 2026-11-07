@@ -1,0 +1,3 @@
+{
+  "meta": { "title": "Session Completion Notifications", "description": "Sends a macOS native notification and sound when a root session response finishes normally. Skips children, cancellation and errors by default; never reads conversation text." }
+}
